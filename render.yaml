@@ -1,3 +1,13 @@
+# Render Blueprint for Parallel.
+# Docs: https://render.com/docs/blueprint-spec
+#
+# Two services, pointed at the Neon Lakebase Postgres branch configured out of band.
+#
+# After the first apply, verify the generated service URLs. If Render appended a
+# suffix to a service name, update CORS_ORIGINS on the API and
+# NEXT_PUBLIC_API_BASE_URL on the web service to match, then the web service will
+# rebuild on the next commit (NEXT_PUBLIC_* values are read at build time).
+
 services:
   - type: web
     name: parallel-api
@@ -7,9 +17,47 @@ services:
     startCommand: uv run uvicorn app.main:app --host 0.0.0.0 --port $PORT
     healthCheckPath: /api/v1/health/ready
     envVars:
+      # Neon pooled connection string with ?ssl=require. Migrations were applied
+      # out of band; do not run alembic from app startup.
       - key: DATABASE_URL
         sync: false
+      # Public URL of the web service, comma separated if hosting more origins.
+      # Example: https://parallel-web.onrender.com
       - key: CORS_ORIGINS
         sync: false
       - key: ENVIRONMENT
         value: production
+      # Optional: enables Gemma 4 recommendations via OpenRouter. Without it the
+      # Concierge serves deterministic grounded results.
+      - key: OPENROUTER_API_KEY
+        sync: false
+      # Optional: enable only after verifying the Neon Auth bridge. Public
+      # browsing needs none of these.
+      - key: AUTH_JWKS_URL
+        sync: false
+      - key: AUTH_ISSUER
+        sync: false
+      - key: AUTH_AUDIENCE
+        sync: false
+      - key: AI_MODEL
+        value: google/gemma-4-26b-a4b-it:free
+      # Secrets for upload storage and narration are set in the dashboard only:
+      # AWS_ENDPOINT_URL_S3, AWS_ACCESS_KEY_ID, AWS_SECRET_ACCESS_KEY, AWS_REGION,
+      # OBJECT_STORAGE_BUCKET, ELEVENLABS_API_KEY, ELEVENLABS_VOICE_ID.
+
+  - type: web
+    name: parallel-web
+    runtime: node
+    rootDir: apps/frontend
+    buildCommand: npm ci && npm run build
+    startCommand: npm run start
+    envVars:
+      - key: NODE_VERSION
+        value: "22"
+      # Absolute base URL of the API service. Read at BUILD time because it is
+      # inlined into the client bundle.
+      # Example: https://parallel-api.onrender.com/api/v1
+      - key: NEXT_PUBLIC_API_BASE_URL
+        sync: false
+      - key: NEXT_PUBLIC_MAP_STYLE_URL
+        value: https://tiles.openfreemap.org/styles/liberty

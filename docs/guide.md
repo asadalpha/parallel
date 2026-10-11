@@ -227,8 +227,10 @@ and must never alter auth-owned tables.
 
 ### Content rules
 
-- No invented or seed story records. Curated content must be real and sourced. Use clearly
-  identified fixtures in tests.
+- Do not invent story records. Curated content must be real and sourced. Use clearly identified
+  fixtures in tests. The development `/seed` tool accepts editor-provided, source-backed content;
+  it is disabled by default, requires a local database and `SEED_ENABLED=true`, and must never be
+  enabled against production.
 - Visits are self-reported and must never be presented as verified presence.
 - Never accept identity or role from a request body.
 
@@ -262,14 +264,31 @@ one.
 
 ## Deployment
 
-`render.yaml` defines the API web service and health check. Connect the repo in Render and set
-secrets in the dashboard — no Render API key is needed to keep the blueprint in the repo.
+`render.yaml` is a two-service Render Blueprint: `parallel-api` (FastAPI) and `parallel-web`
+(Next.js, Node 22). Connect the repo once (New → Blueprint) and fill the prompted values.
 
-Minimum required secrets: `DATABASE_URL`, exact production `CORS_ORIGINS`, and the Neon Auth
-issuer/audience/JWKS values.
+Prompted at apply time:
+
+| Variable | Service | Value |
+| --- | --- | --- |
+| `DATABASE_URL` | parallel-api | Neon pooled connection string with `?ssl=require` |
+| `CORS_ORIGINS` | parallel-api | The deployed web URL, e.g. `https://parallel-web.onrender.com` |
+| `NEXT_PUBLIC_API_BASE_URL` | parallel-web | The deployed API URL, e.g. `https://parallel-api.onrender.com/api/v1` |
+| `OPENROUTER_API_KEY` | parallel-api | Optional; Concierge falls back without it |
+
+Verify the generated URLs after apply. If Render appended a suffix to a service name, update
+`CORS_ORIGINS` and `NEXT_PUBLIC_API_BASE_URL` to match; the web service rebuilds on the next
+commit because `NEXT_PUBLIC_*` is read at build time. `NEXT_PUBLIC_MAP_STYLE_URL` ships default
+OpenFreeMap tiles.
+
+Optional secrets, set in the dashboard only: `AUTH_JWKS_URL`/`AUTH_ISSUER`/`AUTH_AUDIENCE` once
+the Neon Auth bridge is verified, and `AWS_ENDPOINT_URL_S3`, `AWS_ACCESS_KEY_ID`,
+`AWS_SECRET_ACCESS_KEY`, `AWS_REGION`, `OBJECT_STORAGE_BUCKET`, `ELEVENLABS_API_KEY`,
+`ELEVENLABS_VOICE_ID` for uploads and narration.
 
 Run `uv run alembic upgrade head` against the target database as a controlled step before routing
-traffic to schema-dependent routes.
+traffic to schema-dependent routes. The database schema is shared with local development and is
+not applied from app startup.
 
 ---
 

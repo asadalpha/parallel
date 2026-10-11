@@ -2,7 +2,16 @@
 
 import Link from "next/link";
 import type { Route } from "next";
-import { ArrowUpRight, AudioLines, Compass, Footprints, Sparkles, X } from "lucide-react";
+import {
+  ArrowUpRight,
+  AudioLines,
+  Compass,
+  Footprints,
+  LocateFixed,
+  MapPin,
+  Sparkles,
+  X,
+} from "lucide-react";
 import { useState } from "react";
 
 import { ApiError, requestAnotherAngle, requestRecommendation } from "@/lib/api";
@@ -28,10 +37,14 @@ const TRAVEL: Array<{ value: ConciergeRequest["travel_preference"]; label: strin
 export function ConciergePanel({
   center,
   placeLabel,
+  onRequestLocation,
+  onChoosePlace,
   onClose,
 }: {
   center: Center | null;
   placeLabel: string | null;
+  onRequestLocation: () => void;
+  onChoosePlace: () => void;
   onClose: () => void;
 }) {
   const [mood, setMood] = useState<ConciergeRequest["mood"]>("curious");
@@ -108,6 +121,20 @@ export function ConciergePanel({
           {placeLabel || (center ? "Near your location" : "Choose a place on the map first")}
         </p>
 
+        {!center && (
+          <div className="concierge-origin-picker">
+            <p>Choose a starting place. We won’t guess where you are.</p>
+            <div>
+              <button onClick={onRequestLocation}>
+                <LocateFixed size={14} aria-hidden="true" /> Use my location
+              </button>
+              <button onClick={onChoosePlace}>
+                <MapPin size={14} aria-hidden="true" /> Search a place
+              </button>
+            </div>
+          </div>
+        )}
+
         <fieldset className="concierge-fieldset">
           <legend className="section-kicker">WHAT ARE YOU IN THE MOOD FOR?</legend>
           <div className="concierge-options">
@@ -159,7 +186,11 @@ export function ConciergePanel({
 
         {error && <p className="concierge-error" role="status">{error}</p>}
 
-        <button className="concierge-submit" onClick={() => void recommend()} disabled={pending}>
+        <button
+          className="concierge-submit"
+          onClick={() => void recommend()}
+          disabled={pending || !center}
+        >
           {pending ? "Finding a story…" : "Find me a story"}
           {!pending && <ArrowUpRight size={16} aria-hidden="true" />}
         </button>

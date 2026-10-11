@@ -98,10 +98,9 @@ export class ApiError extends Error {
   }
 }
 
-const apiBase = (process.env.NEXT_PUBLIC_API_BASE_URL || "http://localhost:8000/api/v1").replace(
-  /\/$/,
-  "",
-);
+export const apiBase = (
+  process.env.NEXT_PUBLIC_API_BASE_URL || "http://localhost:8000/api/v1"
+).replace(/\/$/, "");
 
 async function getJson<T>(path: string, signal?: AbortSignal): Promise<T> {
   let response: Response;

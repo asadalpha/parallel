@@ -55,6 +55,7 @@ class Story(Base):
     author_id: Mapped[str | None] = mapped_column(String(255), nullable=True)
     title: Mapped[str] = mapped_column(String(240), nullable=False)
     body: Mapped[str] = mapped_column(Text, nullable=False)
+    description: Mapped[str | None] = mapped_column(String(600), nullable=True)
     cover_image_url: Mapped[str | None] = mapped_column(String(2048), nullable=True)
     category: Mapped[str] = mapped_column(String(80), nullable=False)
     story_type: Mapped[str] = mapped_column(String(32), nullable=False)

@@ -11,6 +11,8 @@ class Settings(BaseSettings):
     database_url: str = "postgresql+asyncpg://parallel:parallel@localhost:5432/parallel"
     cors_origins: str = "http://localhost:3000"
     environment: str = "development"
+    seed_enabled: bool = False
+    seed_allow_remote_database: bool = False
 
     auth_jwks_url: str | None = None
     auth_issuer: str | None = None

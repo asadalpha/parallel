@@ -211,10 +211,11 @@ async def generate_story_audio(
             update={"audio_url": await resolve_object_url(cached.audio_url)}
         )
 
-    if len(story.body) > 10_000:
-        raise HTTPException(status_code=422, detail="Story is too long for one narration request")
+    narration_text = (story.description or "").strip()
+    if not narration_text:
+        raise HTTPException(status_code=422, detail="Story needs a description before narration")
     try:
-        audio_bytes, voice_id = await synthesize_story(story.body)
+        audio_bytes, voice_id = await synthesize_story(narration_text)
         object_key = await store_bytes(
             f"audio/{story.id}/{uuid.uuid4()}.mp3", audio_bytes, "audio/mpeg"
         )

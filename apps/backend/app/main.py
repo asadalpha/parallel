@@ -10,6 +10,7 @@ from app.api.routes.ai import router as ai_router
 from app.api.routes.catalog import router as catalog_router
 from app.api.routes.health import router as health_router
 from app.api.routes.media import router as media_router
+from app.api.routes.seed import router as seed_router
 from app.api.routes.writing import router as writing_router
 from app.core.config import get_settings
 from app.db.session import engine
@@ -45,3 +46,7 @@ app.include_router(writing_router, prefix="/api/v1")
 app.include_router(admin_router, prefix="/api/v1")
 app.include_router(media_router, prefix="/api/v1")
 app.include_router(ai_router, prefix="/api/v1")
+
+# Second gate lives in the router itself; see app/api/routes/seed.py.
+if settings.environment.strip().lower() != "production":
+    app.include_router(seed_router, prefix="/api/v1")

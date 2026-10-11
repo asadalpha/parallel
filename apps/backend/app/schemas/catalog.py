@@ -84,6 +84,7 @@ class StorySummary(BaseModel):
 class StoryRead(StorySummary):
     author_id: str | None
     body: str
+    description: str | None = None
     publication_status: str
     created_at: datetime
     updated_at: datetime
@@ -143,6 +144,7 @@ class StoryCreate(BaseModel):
     location_id: uuid.UUID
     title: str = Field(min_length=1, max_length=240)
     body: str = Field(min_length=1, max_length=100_000)
+    description: str | None = Field(default=None, max_length=600)
     category: str = Field(min_length=1, max_length=80)
     story_type: StoryType
     cover_image_object_key: str | None = Field(default=None, max_length=512)
@@ -158,6 +160,7 @@ class CuratedStoryCreate(StoryCreate):
 class StoryPatch(BaseModel):
     title: str | None = Field(default=None, min_length=1, max_length=240)
     body: str | None = Field(default=None, min_length=1, max_length=100_000)
+    description: str | None = Field(default=None, max_length=600)
     category: str | None = Field(default=None, min_length=1, max_length=80)
     story_type: StoryType | None = None
     location_id: uuid.UUID | None = None
@@ -280,6 +283,11 @@ class MediaUploadRead(BaseModel):
     object_key: str
     url: str
     content_type: str
+
+
+class DescriptionDraftRead(BaseModel):
+    description: str
+    is_ai_draft: bool = True
 
 
 class AudioConsentRequest(BaseModel):

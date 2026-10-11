@@ -19,7 +19,7 @@ import {
   X,
 } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import type { CSSProperties } from "react";
 
 import { ApiError, fetchLocations, fetchStories, fetchStory } from "@/lib/api";
@@ -63,6 +63,7 @@ export function ExploreExperience() {
   const [authGateOpen, setAuthGateOpen] = useState(false);
   const [conciergeOpen, setConciergeOpen] = useState(false);
   const [notice, setNotice] = useState<string | null>(null);
+  const searchInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     const timer = window.setTimeout(() => setDebouncedSearch(searchText.trim()), 240);
@@ -77,9 +78,8 @@ export function ExploreExperience() {
   });
 
   const storyFilters = useMemo(() => {
-    if (!center) return null;
     return {
-      ...(bounds ? { bounds } : { origin: { ...center, radius_meters: 5_000 } }),
+      ...(center ? (bounds ? { bounds } : { origin: { ...center, radius_meters: 5_000 } }) : {}),
       ...(storyType === "all" ? {} : { storyType }),
       ...(audioOnly ? { hasAudio: true } : {}),
       ...(multipleChaptersOnly ? { multipleChaptersOnly: true } : {}),
@@ -88,8 +88,8 @@ export function ExploreExperience() {
 
   const storyQuery = useQuery({
     queryKey: ["stories", storyFilters, multipleChaptersOnly],
-    queryFn: ({ signal }) => fetchStories(storyFilters!, signal),
-    enabled: storyFilters !== null,
+    queryFn: ({ signal }) => fetchStories(storyFilters, signal),
+    enabled: true,
     retry: false,
   });
 
@@ -167,6 +167,7 @@ export function ExploreExperience() {
           <div className={`place-search ${searchOpen ? "is-open" : ""}`}>
             <Search size={17} strokeWidth={1.7} aria-hidden="true" />
             <input
+              ref={searchInputRef}
               value={searchText}
               aria-label="Search a city or place"
               role="combobox"
@@ -242,7 +243,7 @@ export function ExploreExperience() {
 
         <div className="map-location-caption" aria-live="polite">
           <span className="caption-pin"><MapPin size={12} aria-hidden="true" /></span>
-          <span>{locationLabel ?? "Choose a place to begin"}</span>
+          <span>{locationLabel ?? "Stories across the atlas"}</span>
           {locationLabel && <span className="caption-separator">·</span>}
           <span>{storyQuery.data?.total ?? 0} stories</span>
         </div>
@@ -400,6 +401,12 @@ export function ExploreExperience() {
         <ConciergePanel
           center={center}
           placeLabel={selectedLocation?.name ?? (userOrigin ? "Near your location" : null)}
+          onRequestLocation={locateMe}
+          onChoosePlace={() => {
+            setConciergeOpen(false);
+            setSearchOpen(true);
+            window.setTimeout(() => searchInputRef.current?.focus(), 0);
+          }}
           onClose={() => setConciergeOpen(false)}
         />
       )}
