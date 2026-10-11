@@ -1,0 +1,42 @@
+# Environment and secrets
+.env
+.env.*
+!.env.example
+!.env.local.example
+.neon
+
+# Intentionally not published to GitHub
+.omo/
+.github/
+.agents/
+PRD.MD
+
+
+
+# Node / Next.js
+node_modules/
+.next/
+out/
+coverage/
+npm-debug.log*
+*.tsbuildinfo
+
+# Python
+.venv/
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.ruff_cache/
+*.egg-info/
+dist/
+build/
+
+# Local data and editor/OS files
+data/
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/
+
+# Tool-generated files
+apps/frontend/next-env.d.ts

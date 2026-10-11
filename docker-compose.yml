@@ -1,0 +1,20 @@
+services:
+  db:
+    image: postgis/postgis:17-3.5-alpine
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-parallel}
+      POSTGRES_USER: ${POSTGRES_USER:-parallel}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-parallel}
+    ports:
+      - "${POSTGRES_PORT:-5433}:5432"
+    volumes:
+      - parallel-postgres:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-parallel} -d ${POSTGRES_DB:-parallel}"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+    restart: unless-stopped
+
+volumes:
+  parallel-postgres:
